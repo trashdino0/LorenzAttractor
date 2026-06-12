@@ -60,17 +60,47 @@ PRESETS = {
 
 
 def compute_lorenz(s: float, r: float, b: float, n: int = NUM_STEPS) -> np.ndarray:
-    """Integrate the Lorenz system with forward Euler."""
+    """Integrate the Lorenz system with RK4.
+
+    Returns a (N, 3) array truncated at the first non-finite value (if any).
+    """
     x, y, z = X0, Y0, Z0
     traj = np.empty((n, 3))
+    dt = DT
     for i in range(n):
-        dx = s * (y - x) * DT
-        dy = (x * (r - z) - y) * DT
-        dz = (x * y - b * z) * DT
-        x += dx
-        y += dy
-        z += dz
+        k1x = s * (y - x)
+        k1y = x * (r - z) - y
+        k1z = x * y - b * z
+
+        k2x = s * ((y + 0.5 * dt * k1y) - (x + 0.5 * dt * k1x))
+        k2y = (x + 0.5 * dt * k1x) * (r - (z + 0.5 * dt * k1z)) - (
+            y + 0.5 * dt * k1y
+        )
+        k2z = (x + 0.5 * dt * k1x) * (y + 0.5 * dt * k1y) - b * (
+            z + 0.5 * dt * k1z
+        )
+
+        k3x = s * ((y + 0.5 * dt * k2y) - (x + 0.5 * dt * k2x))
+        k3y = (x + 0.5 * dt * k2x) * (r - (z + 0.5 * dt * k2z)) - (
+            y + 0.5 * dt * k2y
+        )
+        k3z = (x + 0.5 * dt * k2x) * (y + 0.5 * dt * k2y) - b * (
+            z + 0.5 * dt * k2z
+        )
+
+        k4x = s * ((y + dt * k3y) - (x + dt * k3x))
+        k4y = (x + dt * k3x) * (r - (z + dt * k3z)) - (y + dt * k3y)
+        k4z = (x + dt * k3x) * (y + dt * k3y) - b * (z + dt * k3z)
+
+        x += (dt / 6.0) * (k1x + 2 * k2x + 2 * k3x + k4x)
+        y += (dt / 6.0) * (k1y + 2 * k2y + 2 * k3y + k4y)
+        z += (dt / 6.0) * (k1z + 2 * k2z + 2 * k3z + k4z)
+
         traj[i] = x, y, z
+
+        if not np.isfinite(traj[i]).all():
+            return traj[:i]
+
     return traj
 
 
@@ -243,6 +273,14 @@ class LorenzGUI(QWidget):
 
     def compute_and_display(self):
         """Re-compute the trajectory and update all visuals."""
+        # Stop any running animation first
+        if self.animating:
+            self._timer.stop()
+            self.animating = False
+            self.anim_cb.blockSignals(True)
+            self.anim_cb.setChecked(False)
+            self.anim_cb.blockSignals(False)
+
         self.full_traj = compute_lorenz(self.sigma, self.rho, self.beta)
         colors = self._gradient_colors(self.full_traj)
 
@@ -283,19 +321,24 @@ class LorenzGUI(QWidget):
         if not hasattr(self, "axis"):
             self.axis = scene.visuals.XYZAxis(parent=self.view.scene)
 
+        if hasattr(self, "line"):
+            self.line.visible = True
+
         self.anim_frame = 0
         self._frame_camera()
 
     @staticmethod
     def _gradient_colors(traj: np.ndarray) -> np.ndarray:
         """Map the z-axis onto a cool-warm colour gradient."""
+        if len(traj) == 0:
+            return np.empty((0, 4))
         z = traj[:, 2]
         lo, hi = z.min(), z.max()
         norm = np.zeros_like(z) if hi - lo < 1e-12 else (z - lo) / (hi - lo)
         return get_colormap("coolwarm")[norm]
 
     def _frame_camera(self):
-        if self.full_traj is None:
+        if self.full_traj is None or len(self.full_traj) == 0:
             return
         mn = self.full_traj.min(axis=0)
         mx = self.full_traj.max(axis=0)
@@ -344,12 +387,21 @@ class LorenzGUI(QWidget):
     def _toggle_animation(self, on: bool):
         self.animating = on
         if on:
+            if self.full_traj is None or len(self.full_traj) == 0:
+                self.animating = False
+                self.anim_cb.blockSignals(True)
+                self.anim_cb.setChecked(False)
+                self.anim_cb.blockSignals(False)
+                return
             self.anim_frame = 0
+            self.line.visible = False
             self._timer.start(20)
         else:
             self._timer.stop()
-            self.trace_line.set_data(pos=self.full_traj[:1])
-            self.head.set_data(pos=self.full_traj[:1])
+            self.line.visible = True
+            if self.full_traj is not None and len(self.full_traj) > 0:
+                self.trace_line.set_data(pos=self.full_traj[:1])
+                self.head.set_data(pos=self.full_traj[:1])
 
     def _animate_step(self):
         if self.full_traj is None:
@@ -361,7 +413,14 @@ class LorenzGUI(QWidget):
             pos=self.full_traj[self.anim_frame - 1 : self.anim_frame]
         )
         if self.anim_frame >= n:
-            self.anim_frame = 0
+            self._timer.stop()
+            self.animating = False
+            self.anim_cb.blockSignals(True)
+            self.anim_cb.setChecked(False)
+            self.anim_cb.blockSignals(False)
+            self.line.visible = True
+            self.trace_line.set_data(pos=self.full_traj[:1])
+            self.head.set_data(pos=self.full_traj[:1])
 
     # -- view -----------------------------------------------------------
 
