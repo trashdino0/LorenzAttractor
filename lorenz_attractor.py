@@ -54,8 +54,13 @@ PRESETS = {
     "Classic":       (10.0, 28.0, 8.0 / 3.0),
     "Butterfly":     (10.0, 28.0, 2.0),
     "Chaos":         (10.0, 99.0, 8.0 / 3.0),
-    "Lazy":          (5.0,  20.0, 1.0),
-    "Transient":     (16.0, 45.0, 4.0),
+    "Noise":         (10.0, 166.0, 8.0 / 3.0),
+    "Twin Peaks":    (10.0, 45.0, 2.5),
+    "Dense":         (16.0, 40.0, 4.0),
+    "Tall":          (10.0, 80.0, 1.2),
+    "Flat":          (3.0,  26.0, 1.0),
+    "Pinched":       (10.0, 24.0, 4.0),
+    "Extreme":       (28.0, 46.4, 8.0 / 3.0),
 }
 
 
@@ -173,8 +178,8 @@ class LorenzGUI(QWidget):
         grp.setLayout(pl)
         side.addWidget(grp)
 
-        self.slider_sigma = self._make_slider(0.1, 50, self.sigma, "\u03c3 (Sigma)", pl)
-        self.slider_rho = self._make_slider(0.1, 100, self.rho, "\u03c1 (Rho)", pl)
+        self.slider_sigma = self._make_slider(0.1, 60, self.sigma, "\u03c3 (Sigma)", pl)
+        self.slider_rho = self._make_slider(0.1, 200, self.rho, "\u03c1 (Rho)", pl)
         self.slider_beta = self._make_slider(0.1, 15, self.beta, "\u03b2 (Beta)", pl)
 
         self.slider_sigma.valueChanged.connect(self._on_param_change)

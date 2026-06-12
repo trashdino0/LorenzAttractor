@@ -101,13 +101,18 @@ mouse to orbit, pan, and zoom the camera:
 
 ## Presets
 
-| Preset      | σ   | ρ   | β      | Behaviour                              |
-|-------------|-----|-----|--------|----------------------------------------|
-| Classic     | 10  | 28  | 8/3    | The canonical butterfly attractor      |
-| Butterfly   | 10  | 28  | 2.0    | Extended wingspan                      |
-| Chaos       | 10  | 99  | 8/3    | Highly chaotic, widely spread orbits   |
-| Lazy        | 5   | 20  | 1.0    | Compact, slower-evolving trajectory    |
-| Transient   | 16  | 45  | 4.0    | Long transient before settling         |
+| Preset      | σ   | ρ    | β      | Behaviour                                  |
+|-------------|-----|------|--------|--------------------------------------------|
+| Classic     | 10  | 28   | 8/3    | The canonical butterfly attractor          |
+| Butterfly   | 10  | 28   | 2.0    | Extended wingspan, wider lobes             |
+| Chaos       | 10  | 99   | 8/3    | Highly chaotic, widely spread orbits       |
+| Noise       | 10  | 166  | 8/3    | Extreme chaos, near-uniform noise-like     |
+| Twin Peaks  | 10  | 45   | 2.5    | Two distinct, well-separated lobe centres  |
+| Dense       | 16  | 40   | 4.0    | Tightly wound, compact trajectory          |
+| Tall        | 10  | 80   | 1.2    | Vertically stretched, towering lobes       |
+| Flat        | 3   | 26   | 1.0    | Low-profile, squashed attractor            |
+| Pinched     | 10  | 24   | 4.0    | Narrow pinched lobes near the onset of chaos |
+| Extreme     | 28  | 46.4 | 8/3    | High-sigma regime, thin widespread orbits  |
 
 ## Project structure
 
